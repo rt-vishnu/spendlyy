@@ -56,7 +56,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("profile"))
 
     if request.method == "POST":
         email = request.form.get("email", "").strip()
@@ -76,7 +76,7 @@ def login():
         session.clear()
         session["user_id"] = row["id"]
         session["user_name"] = row["name"]
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("profile"))
 
     return render_template("login.html")
 
@@ -110,7 +110,37 @@ def dashboard():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    user = {
+        "name": "Raviteja Vishnubhotla",
+        "email": "ravi@spendly.com",
+        "initials": "RV",
+        "member_since": "January 15, 2026",
+    }
+    stats = {
+        "total_spent": "₹247.64",
+        "transactions": 8,
+        "top_category": "Food",
+    }
+    expenses = [
+        {"date": "May 07, 2026", "description": "Snack",              "category": "Food",          "amount": "₹9.80"},
+        {"date": "May 06, 2026", "description": "New shoes",          "category": "Shopping",      "amount": "₹55.25"},
+        {"date": "May 05, 2026", "description": "Movie ticket",       "category": "Entertainment", "amount": "₹15.00"},
+        {"date": "May 04, 2026", "description": "Doctor appointment", "category": "Health",        "amount": "₹40.00"},
+        {"date": "May 03, 2026", "description": "Electricity bill",   "category": "Bills",         "amount": "₹85.00"},
+        {"date": "May 02, 2026", "description": "Bus fare",           "category": "Transport",     "amount": "₹7.50"},
+        {"date": "May 01, 2026", "description": "Lunch at cafe",      "category": "Food",          "amount": "₹12.99"},
+    ]
+    categories = [
+        {"name": "Bills",         "amount": "₹85.00", "pct": 34, "bar_class": "bar-bills"},
+        {"name": "Shopping",      "amount": "₹55.25", "pct": 22, "bar_class": "bar-shopping"},
+        {"name": "Health",        "amount": "₹40.00", "pct": 16, "bar_class": "bar-health"},
+        {"name": "Food",          "amount": "₹22.79", "pct": 9,  "bar_class": "bar-food"},
+        {"name": "Entertainment", "amount": "₹15.00", "pct": 6,  "bar_class": "bar-entertainment"},
+        {"name": "Transport",     "amount": "₹7.50",  "pct": 3,  "bar_class": "bar-travel"},
+    ]
+    return render_template("profile.html", user=user, stats=stats, expenses=expenses, categories=categories)
 
 
 @app.route("/expenses/add")
