@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Profile — Spendly{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <!-- User info card -->
+    <div class="profile-header-card">
+        <div class="profile-avatar">{{ user.initials }}</div>
+        <div class="profile-info">
+            <h1 class="profile-name">{{ user.name }}</h1>
+            <p class="profile-email">{{ user.email }}</p>
+            <p class="profile-since">Member since {{ user.member_since }}</p>
+        </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="dashboard-stats profile-stats">
+        <div class="stat-card">
+            <span class="stat-label">Total Spent</span>
+            <span class="stat-value">{{ stats.total_spent }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Transactions</span>
+            <span class="stat-value">{{ stats.transactions }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Top Category</span>
+            <span class="stat-value">{{ stats.top_category }}</span>
+        </div>
+    </div>
+
+    <!-- Transactions + categories -->
+    <div class="profile-grid">
+
+        <!-- Recent transactions -->
+        <div class="profile-card">
+            <h2 class="profile-card-title">Recent Transactions</h2>
+            <table class="profile-tx-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th class="tx-amount">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td class="tx-date">{{ expense.date }}</td>
+                        <td>{{ expense.description }}</td>
+                        <td>
+                            <span class="badge badge-{{ expense.category | lower }}">{{ expense.category }}</span>
+                        </td>
+                        <td class="tx-amount">{{ expense.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Category breakdown -->
+        <div class="profile-card">
+            <h2 class="profile-card-title">Category Breakdown</h2>
+            <div class="dashboard-chart profile-chart">
+                {% for cat in categories %}
+                <div class="chart-row">
+                    <div class="chart-label">{{ cat.name }}</div>
+                    <div>
+                        <div class="chart-bar-track">
+                            <div class="chart-bar {{ cat.bar_class }}" style="width: {{ cat.pct }}%"></div>
+                        </div>
+                        <div class="cat-amount">{{ cat.amount }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
