@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date, datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import database helpers
@@ -8,6 +9,20 @@ from database.queries import get_recent_transactions, get_user_by_id, get_summar
 app = Flask(__name__)
 app.secret_key = 'dev-secret-change-me'
 app.teardown_appcontext(close_db)
+
+
+def _parse_date(s):
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date() if s else None
+    except ValueError:
+        return None
+
+
+def _month_start_n_months_ago(today, n):
+    month = today.month - n
+    year = today.year + (month - 1) // 12
+    month = ((month - 1) % 12) + 1
+    return date(year, month, 1)
 
 # ------------------------------------------------------------------ #
 # Routes                                                              #
@@ -114,11 +129,34 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
     user_id = session["user_id"]
-    user = get_user_by_id(user_id)
-    stats = get_summary_stats(user_id)
-    expenses = get_recent_transactions(user_id)
-    categories = get_category_breakdown(user_id)
-    return render_template("profile.html", user=user, stats=stats, expenses=expenses, categories=categories)
+
+    active_from = _parse_date(request.args.get("from"))
+    active_to   = _parse_date(request.args.get("to"))
+    date_from = active_from.isoformat() if active_from else None
+    date_to   = active_to.isoformat()   if active_to   else None
+
+    today = date.today()
+    first_this_month = today.replace(day=1)
+    last_month_end   = first_this_month - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+    three_months_start = _month_start_n_months_ago(today, 3)
+
+    presets = {
+        "This Month":    (first_this_month.isoformat(), today.isoformat()),
+        "Last Month":    (last_month_start.isoformat(), last_month_end.isoformat()),
+        "Last 3 Months": (three_months_start.isoformat(), today.isoformat()),
+        "This Year":     (date(today.year, 1, 1).isoformat(), today.isoformat()),
+    }
+
+    user       = get_user_by_id(user_id)
+    stats      = get_summary_stats(user_id, date_from, date_to)
+    expenses   = get_recent_transactions(user_id, date_from=date_from, date_to=date_to)
+    categories = get_category_breakdown(user_id, date_from, date_to)
+
+    return render_template("profile.html",
+        user=user, stats=stats, expenses=expenses, categories=categories,
+        presets=presets, active_from=date_from, active_to=date_to,
+    )
 
 
 @app.route("/expenses/add")
