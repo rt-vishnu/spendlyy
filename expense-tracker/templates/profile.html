@@ -15,6 +15,32 @@
         </div>
     </div>
 
+    <!-- Filter bar -->
+    <div class="filter-bar">
+        <div class="filter-presets">
+            {% for label, (f, t) in presets.items() %}
+            <a href="{{ url_for('profile', **{'from': f, 'to': t}) }}"
+               class="btn-preset{% if active_from == f and active_to == t %} active{% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+        <form class="filter-custom" method="get" action="{{ url_for('profile') }}">
+            <input class="form-input filter-date" type="date" name="from"
+                   value="{{ active_from or '' }}">
+            <span class="filter-sep">→</span>
+            <input class="form-input filter-date" type="date" name="to"
+                   value="{{ active_to or '' }}">
+            <button type="submit" class="btn-preset">Apply</button>
+        </form>
+        {% if active_from or active_to %}
+        <div class="filter-active-label">
+            Showing: {{ active_from or '…' }} → {{ active_to or '…' }}
+            <a href="{{ url_for('profile') }}" class="filter-clear">Clear filter</a>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Summary stats -->
     <div class="dashboard-stats profile-stats">
         <div class="stat-card">
